@@ -1,0 +1,33 @@
+<ion-header>
+  <ion-toolbar color="primary">
+    <ion-title>Edit Product</ion-title>
+    <ion-buttons slot="primary">
+      <ion-button (click)="onCancel()">
+        <ion-icon name="close"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+  <form [formGroup]="form">
+    <ion-item>
+      <ion-label position="floating">Name</ion-label>
+      <ion-input type="text" formControlName="name"></ion-input>
+    </ion-item>
+    <ion-item>
+      <ion-label position="floating">Description</ion-label>
+      <ion-input type="text" formControlName="description"></ion-input>
+    </ion-item>
+    <ion-item>
+      <ion-label position="floating">Price</ion-label>
+      <ion-input type="text" formControlName="price"></ion-input>
+    </ion-item>
+    <ion-button
+      class="ion-margin-vertical"
+      color="primary"
+      [disabled]="form.invalid"
+      (click)="onSubmit()"
+    >Edit</ion-button>
+  </form>
+</ion-content>

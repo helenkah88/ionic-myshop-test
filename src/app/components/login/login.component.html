@@ -1,0 +1,38 @@
+<ion-header>
+  <ion-toolbar color="primary">
+    <ion-title>{{ isLogin ? 'Log in' : 'Sign up' }}</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+  <form [formGroup]="form">
+    <ion-item>
+      <ion-label position="floating">Email</ion-label>
+      <ion-input type="email" formControlName="email"></ion-input>
+    </ion-item>
+    <ion-item>
+      <ion-label position="floating">Password</ion-label>
+      <ion-input type="password" formControlName="password"></ion-input>
+    </ion-item>
+
+    <p style="display: flex;"
+      class="ion-justify-content-center ion-align-items-center ion-no-margin ion-margin-top"
+    >
+      Log in or
+      <ion-button
+        class="ion-no-margin"
+        fill="clear"
+        color="primary"
+        (click)="toggleLoginState()"
+      >create</ion-button>
+      an account
+    </p>
+
+    <ion-button
+      expand="block"
+      [disabled]="form.invalid"
+      (click)="onSubmit()"
+      class="ion-no-margin"
+    >{{ isLogin ? 'Log in' : 'Sign Up' }}</ion-button>
+  </form>
+</ion-content>

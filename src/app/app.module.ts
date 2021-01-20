@@ -1,6 +1,7 @@
 import { NgModule } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
 import { RouteReuseStrategy } from '@angular/router';
+import { ReactiveFormsModule } from '@angular/forms';
 
 import { IonicModule, IonicRouteStrategy } from '@ionic/angular';
 import { SplashScreen } from '@ionic-native/splash-screen/ngx';
@@ -12,11 +13,17 @@ import { AngularFireAuthModule } from '@angular/fire/auth';
 import { AngularFireStorageModule } from '@angular/fire/storage';
 
 import { AppComponent } from './app.component';
+import { TabsComponent } from './components/tabs/tabs.component';
+import { LoginComponent } from './components/login/login.component';
 import { AppRoutingModule } from './app-routing.module';
 import { environment } from '../environments/environment';
 
 @NgModule({
-  declarations: [AppComponent],
+  declarations: [
+    AppComponent,
+    TabsComponent,
+    LoginComponent
+  ],
   entryComponents: [],
   imports: [
     BrowserModule,
@@ -25,7 +32,8 @@ import { environment } from '../environments/environment';
     AngularFirestoreModule,
     AngularFireAuthModule,
     AngularFireStorageModule,
-    AppRoutingModule
+    AppRoutingModule,
+    ReactiveFormsModule
   ],
   providers: [
     StatusBar,

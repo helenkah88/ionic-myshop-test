@@ -1,16 +1,60 @@
 import { NgModule } from '@angular/core';
 import { PreloadAllModules, RouterModule, Routes } from '@angular/router';
+import { TabsComponent } from './components/tabs/tabs.component';
+import { LoginComponent } from './components/login/login.component';
+import { AuthGuard } from './services/auth.guard';
 
 const routes: Routes = [
   {
-    path: 'categories',
-    loadChildren: () => import('./pages/categories/categories.module').then( m => m.CategoriesPageModule)
+    path: 'login',
+    component: LoginComponent
   },
   {
     path: '',
-    redirectTo: 'categories',
-    pathMatch: 'full'
+    canActivate: [AuthGuard],
+    component: TabsComponent,
+    children: [
+      {
+        path: 'categories',
+        children: [
+          {
+            path: '',
+            loadChildren: () => import('./pages/categories/categories.module').then( m => m.CategoriesPageModule)
+          },
+          {
+            path: ':categoryId/products',
+            children: [
+              {
+                path: '',
+                loadChildren: () => import('./pages/products/products.module').then( m => m.ProductsPageModule)
+              },
+              {
+                path: 'new',
+                loadChildren: () => import('./pages/products/product-new/product-new.module').then( m => m.ProductNewPageModule)
+              },
+              {
+                path: ':productId',
+                loadChildren: () => import('./pages/products/product-details/product-details.module').then( m => m.ProductDetailsPageModule)
+              }
+            ]
+          },
+        ]
+      },
+      {
+        path: 'new',
+        loadChildren: () => import('./pages/products/product-new/product-new.module').then( m => m.ProductNewPageModule)
+      },
+      {
+        path: '',
+        redirectTo: '/categories',
+        pathMatch: 'full'
+      }
+    ]
   },
+  {
+    path: '**',
+    redirectTo: ''
+  }
 ];
 
 @NgModule({

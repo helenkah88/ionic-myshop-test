@@ -1,0 +1,11 @@
+{
+  "targets": {
+    "ionic-myshop-test": {
+      "hosting": {
+        "app": [
+          "ionic-myshop-test"
+        ]
+      }
+    }
+  }
+}

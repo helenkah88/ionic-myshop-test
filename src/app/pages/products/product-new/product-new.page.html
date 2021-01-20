@@ -1,0 +1,55 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="categories"></ion-back-button>
+    </ion-buttons>
+    <ion-title>New Product</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+  <!-- <ion-item>
+    <ion-label>
+      <ion-item lines="none" class="ion-no-padding">
+        <div>ghio gvhd</div>
+        <ion-icon name="add"></ion-icon>
+      </ion-item>
+      <p>hgi</p>
+    </ion-label>
+    <ion-label>
+      <div>jgei</div>
+    </ion-label>
+    <ion-icon name="add" slot="end"></ion-icon>
+    <ion-button slot="end" fill="clear">gjir</ion-button>
+    <ion-note slot="end">5</ion-note>
+  </ion-item> -->
+  <form [formGroup]="form">
+    <ion-item>
+      <ion-label position="floating">Name</ion-label>
+      <ion-input type="text" formControlName="name"></ion-input>
+    </ion-item>
+    <ion-item>
+      <ion-label position="floating">Description</ion-label>
+      <ion-input type="text" formControlName="description"></ion-input>
+    </ion-item>
+    <ion-item>
+      <ion-label position="floating">Price</ion-label>
+      <ion-input type="number" formControlName="price"></ion-input>
+    </ion-item>
+    <ion-item *ngIf="!categoryId">
+      <ion-label position="floating">Categories</ion-label>
+      <ion-select formControlName="categoryId">
+        <ion-select-option
+          *ngFor="let category of categories$ | async"
+          [value]="category.categoryId"
+        >{{ category.name }}</ion-select-option>
+      </ion-select>
+    </ion-item>
+    <ion-button
+      class="ion-margin-vertical"
+      color="primary"
+      [disabled]="form.invalid"
+      (click)="onSubmit()"
+    >Save</ion-button>
+  </form>
+</ion-content>

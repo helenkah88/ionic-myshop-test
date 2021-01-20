@@ -1,0 +1,50 @@
+<ion-header>
+  <ion-toolbar color=primary>
+    <ion-title>Categories</ion-title>
+    <ion-buttons slot="primary">
+      <ion-button fill="clear" (click)="authService.logout()">Log out</ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+  <ion-button color="primary" (click)="create()">
+    Add Category
+    <ion-icon slot="end" name="add-outline"></ion-icon>
+  </ion-button>
+  <div class="category-list">
+    <ng-container *ngFor="let category of categories$ | async">
+      <ion-card [routerLink]="['/categories', category.categoryId, 'products']">
+        <div class="options">
+          <ion-button
+            expand="full"
+            size="small"
+            color="light"
+            fill="clear"
+            class="ion-no-margin"
+            (click)="edit($event, category.categoryId)"
+          >
+            <ion-icon slot="icon-only" name="pencil"></ion-icon>
+          </ion-button>
+
+          <ion-button
+            expand="full"
+            size="small"
+            color="light"
+            fill="clear"
+            class="ion-no-margin"
+            (click)="delete($event, category.categoryId)"
+          >
+            <ion-icon slot="icon-only" name="trash-outline"></ion-icon>
+          </ion-button>
+        </div>
+        <ion-img [src]="category.coverImg"></ion-img>
+        <ion-card-header>
+          <ion-card-title>{{ category.name }}</ion-card-title>
+        </ion-card-header>
+
+        <ion-card-content>{{ category.description }}</ion-card-content>
+      </ion-card>
+    </ng-container>
+  </div>
+</ion-content>

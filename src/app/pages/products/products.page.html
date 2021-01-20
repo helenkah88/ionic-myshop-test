@@ -1,0 +1,52 @@
+<ion-header translucent>
+  <ion-toolbar color="primary">
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/categories"></ion-back-button>
+    </ion-buttons>
+    <ion-title>Products</ion-title>
+    <ion-buttons slot="primary">
+      <ion-button [routerLink]="['/categories', categoryId, 'products', 'new']" size="large">
+        <ion-icon slot="icon-only" name="add"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content fullscreen>
+  <ion-list>
+    <ion-list-header>
+      Products in {{ category?.name }} Category
+    </ion-list-header>
+  </ion-list>
+  <ng-container *ngIf="products?.length">
+    <ion-list>
+      <ion-item-sliding
+        #slidingItem
+        *ngFor="let product of products"
+        [routerLink]="['/categories', categoryId, 'products', product.productId]"
+      >
+        <ion-item>
+          <ion-thumbnail slot="start">
+            <ion-img [src]="product.photoUrl"></ion-img>
+          </ion-thumbnail>
+          <ion-label>
+            <h2>{{ product.name }}</h2>
+            <p>{{ product.description.substr(0, 50) + '...' }}</p>
+          </ion-label>
+          <ion-note slot="end" color="primary">{{ product.price | currency }}</ion-note>
+        </ion-item>
+
+        <ion-item-options>
+          <ion-item-option color="tertiary" (click)="edit($event, product.productId, slidingItem)">
+            <ion-icon slot="icon-only" name="pencil"></ion-icon>
+          </ion-item-option>
+          <ion-item-option color="danger" (click)="delete($event, product.productId)">
+            <ion-icon slot="icon-only" name="trash"></ion-icon>
+          </ion-item-option>
+        </ion-item-options>
+      </ion-item-sliding>
+    </ion-list>
+  </ng-container>
+
+  <p class="ion-margin-start" *ngIf="!products?.length">No products found. Add first product to this category!</p>
+</ion-content>
