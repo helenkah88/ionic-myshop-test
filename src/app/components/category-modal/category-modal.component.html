@@ -19,6 +19,14 @@
       <ion-label position="floating">Description</ion-label>
       <ion-input type="text" formControlName="description"></ion-input>
     </ion-item>
+    <ng-container *ngIf="isLoaded">
+      <app-image-loader
+        [cameraSourceType]="imageFrom"
+        [showPreview]="showPreview"
+        [defaultPreview]="defaultPreview"
+        (imgPicked)="onImgPicked($event)"
+      ></app-image-loader>
+    </ng-container>
     <ion-button
       class="ion-margin-vertical"
       color="primary"

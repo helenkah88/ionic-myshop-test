@@ -23,10 +23,18 @@
       <ion-label position="floating">Price</ion-label>
       <ion-input type="text" formControlName="price"></ion-input>
     </ion-item>
+    <ng-container *ngIf="isLoaded">
+      <app-image-loader
+        [cameraSourceType]="imageFrom"
+        [showPreview]="showPreview"
+        [defaultPreview]="defaultPreview"
+        (imgPicked)="onImgPicked($event)"
+      ></app-image-loader>
+    </ng-container>
     <ion-button
       class="ion-margin-vertical"
       color="primary"
-      [disabled]="form.invalid"
+      [disabled]="!(isDirty$ | async) && !isImgModified"
       (click)="onSubmit()"
     >Edit</ion-button>
   </form>

@@ -27,7 +27,8 @@ export class ProductsService {
   }
 
   create(data: Product) {
-    return this.firestore.collection<Product>(this.colName).add(data);
+    return this.firestore.collection<Product>(this.colName).add(data)
+      .catch(console.log);
   }
 
   update(id, data: Product) {

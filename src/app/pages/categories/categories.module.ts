@@ -8,14 +8,19 @@ import { CategoriesPageRoutingModule } from './categories-routing.module';
 
 import { CategoriesPage } from './categories.page';
 import { CategoryModalComponent } from 'src/app/components/category-modal/category-modal.component';
+import { SharedModule } from '../../shared/shared/shared.module';
 
 @NgModule({
   imports: [
     CommonModule,
     ReactiveFormsModule,
+    SharedModule,
     IonicModule,
     CategoriesPageRoutingModule
   ],
-  declarations: [CategoriesPage, CategoryModalComponent],
+  declarations: [
+    CategoriesPage,
+    CategoryModalComponent
+  ]
 })
 export class CategoriesPageModule {}

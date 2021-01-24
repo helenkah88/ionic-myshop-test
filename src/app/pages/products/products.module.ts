@@ -8,14 +8,19 @@ import { ProductsPageRoutingModule } from './products-routing.module';
 
 import { ProductsPage } from './products.page';
 import { ProductModalComponent } from 'src/app/components/product-modal/product-modal.component';
+import { SharedModule } from '../../shared/shared/shared.module';
 
 @NgModule({
   imports: [
     CommonModule,
     ReactiveFormsModule,
+    SharedModule,
     IonicModule,
     ProductsPageRoutingModule
   ],
-  declarations: [ProductsPage, ProductModalComponent]
+  declarations: [
+    ProductsPage,
+    ProductModalComponent,
+  ]
 })
 export class ProductsPageModule {}

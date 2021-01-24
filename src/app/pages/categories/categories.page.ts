@@ -56,7 +56,6 @@ export class CategoriesPage implements OnInit {
                 const cat: Category = {
                   ...data.data,
                   createdBy: user.uid,
-                  coverImg: 'https://encrypted-tbn3.gstatic.com/shopping?q=tbn:ANd9GcRBVItn_oqnXbd-bSzgnM5bt1wdiuJ8jxUQLqPh_IuZHzS3MZ3HCIxZ3-xZ6v6nmskFSy_gWzecIrwzEwGQPRnjmH_3I8Jfz5vgWOkZbgt8Q17YhUN9uaFclA&usqp=CAc'
                 };
                 return cat;
               }),
