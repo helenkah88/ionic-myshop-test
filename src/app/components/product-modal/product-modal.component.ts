@@ -1,13 +1,14 @@
 import { Component, OnInit, Input, OnDestroy } from '@angular/core';
 import { FormControl, FormGroup, Validators } from '@angular/forms';
-import { AlertController, ModalController } from '@ionic/angular';
+import { AlertController, LoadingController, ModalController } from '@ionic/angular';
 import { ProductsService } from 'src/app/services/products.service';
-import { Product } from '../../models/product.interface';
 import { map, take } from 'rxjs/operators';
 import { CameraSource } from '@capacitor/core';
 import { StorageService } from 'src/app/services/storage.service';
 import { dirtyCheck } from '@ngneat/dirty-check-forms';
-import { BehaviorSubject, Observable, of, Subscription } from 'rxjs';
+import { Observable, of, Subscription } from 'rxjs';
+import { Image } from '../../models/image.interface';
+import { convertToBase64 } from 'src/app/utilities/convert-image';
 
 @Component({
   selector: 'app-product-modal',
@@ -18,14 +19,16 @@ export class ProductModalComponent implements OnInit, OnDestroy {
 
   @Input() productId: string;
 
-  image: { photoUrl: string, format: string };
+  image: Image;
   imageFrom: CameraSource = CameraSource.Photos;
   showPreview: boolean;
   defaultPreview: string;
   isLoaded: boolean;
   isImgModified: boolean;
   productSub: Subscription;
+  imageSub: Subscription;
   isDirtySub: Subscription;
+  isDirty$: Observable<boolean>;
 
   form: FormGroup = new FormGroup({
     name: new FormControl('', { validators: [Validators.required] }),
@@ -34,11 +37,10 @@ export class ProductModalComponent implements OnInit, OnDestroy {
     photoUrl: new FormControl('')
   });
 
-  isDirty$: Observable<boolean>;
-
   constructor(
     private productsService: ProductsService,
     private storageService: StorageService,
+    private loadingCtrl: LoadingController,
     private modalCtrl: ModalController,
     private alertCtrl: AlertController
   ) { }
@@ -62,8 +64,20 @@ export class ProductModalComponent implements OnInit, OnDestroy {
       this.isLoaded = true;
 
       this.isDirty$ = dirtyCheck(this.form, of(product));
-
     });
+  }
+
+  /** Getters for form controls */
+  get name() {
+    return this.form.get('name');
+  }
+
+  get price() {
+    return this.form.get('price');
+  }
+
+  get description() {
+    return this.form.get('description');
   }
 
   private populateForm(data) {
@@ -72,8 +86,15 @@ export class ProductModalComponent implements OnInit, OnDestroy {
     });
   }
 
-  private convertToBase64({ photoUrl, format }) {
-    return photoUrl.replace(`data:image/${format};base64,`, '');
+  private updateForm(data) {
+    this.form.patchValue(data);
+  }
+
+  private handleModal(data) {
+    return this.modalCtrl.dismiss(data, 'confirm').then(() => {
+      this.form.reset();
+      this.showPreview = false;
+    });
   }
 
   onCancel() {
@@ -89,12 +110,13 @@ export class ProductModalComponent implements OnInit, OnDestroy {
               text: 'Leave',
               handler: () => {
                 this.modalCtrl.dismiss(null, 'cancel');
+                this.isDirtySub.unsubscribe();
                 return true;
               }
             },
             {
               text: 'Stay',
-              role: 'Cancel'
+              role: 'cancel'
             }
           ]
         });
@@ -103,20 +125,28 @@ export class ProductModalComponent implements OnInit, OnDestroy {
     });
   }
 
-  onSubmit() {
+  async onSubmit() {
     if (!this.form.valid) {
       return;
     }
-    this.storageService.saveImg(this.image).pipe(
-      take(1)
-    ).subscribe(url => {
-      this.form.patchValue({ photoUrl: url });
-      this.modalCtrl.dismiss(this.form.value, 'confirm')
-        .then(() => {
-          this.form.reset();
-          this.showPreview = false;
-        });
+    const loader = await this.loadingCtrl.create({
+      message: 'loading...'
     });
+
+    loader.present();
+
+    if (!this.isImgModified) {
+      this.handleModal(this.form.value);
+      loader.dismiss();
+    } else {
+      this.imageSub = this.storageService.saveImg(this.image).pipe(
+        take(1)
+      ).subscribe(url => {
+        this.updateForm({ photoUrl: url });
+        this.handleModal(this.form.value);
+        loader.dismiss();
+      });
+    }
   }
 
   ngOnDestroy() {
@@ -124,11 +154,13 @@ export class ProductModalComponent implements OnInit, OnDestroy {
     this.productSub && this.productSub.unsubscribe();
     // tslint:disable-next-line: no-unused-expression
     this.isDirtySub && this.isDirtySub.unsubscribe();
+    // tslint:disable-next-line: no-unused-expression
+    this.imageSub && this.imageSub.unsubscribe();
   }
 
   async onImgPicked(file) {
     // const file = await convertToBlob(file);
-    file.photoUrl = this.convertToBase64(file);
+    file.photoUrl = convertToBase64(file);
     this.image = file;
     this.isImgModified = true;
   }

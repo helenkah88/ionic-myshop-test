@@ -3,7 +3,7 @@ import { Observable } from 'rxjs';
 import { Category } from 'src/app/models/category.interface';
 import { CategoriesService } from 'src/app/services/categories.service';
 
-import { ModalController, LoadingController } from '@ionic/angular';
+import { AlertController, LoadingController, ModalController } from '@ionic/angular';
 import { CategoryModalComponent, mode } from 'src/app/components/category-modal/category-modal.component';
 import { AuthService } from 'src/app/services/auth.service';
 import { map, take, tap } from 'rxjs/operators';
@@ -20,12 +20,23 @@ export class CategoriesPage implements OnInit {
   constructor(
     private categoriesService: CategoriesService,
     public authService: AuthService,
+    private loadingCtrl: LoadingController,
     private modalCtrl: ModalController,
-    private loadingCtrl: LoadingController
+    private alertCtrl: AlertController
   ) { }
 
-  ngOnInit() {
-    this.categories$ = this.categoriesService.getAll();
+  async ngOnInit() {
+    const loader = await this.loadingCtrl.create({
+      message: 'loading...'
+    });
+
+    loader.present();
+
+    this.categories$ = this.categoriesService.getAll().pipe(
+      tap(() => {
+        loader.dismiss();
+      })
+    );
   }
 
   private async showModal(selectedMode: mode, id?: string) {
@@ -38,46 +49,43 @@ export class CategoriesPage implements OnInit {
     });
     modal.present();
     const { data, role } = await modal.onDidDismiss<{ data: Category, mode: mode }>();
-
     if (role === 'confirm') {
-      this.loadingCtrl.create({
-        message: 'loading...'
-      }).then(loadingElem => {
-        loadingElem.present();
-        switch (data.mode) {
-          case 'create':
-            this.authService.user.pipe(
-              take(1),
-              map((user) => {
-                if (!user) {
-                  return;
-                }
-                console.log(user);
-                const cat: Category = {
-                  ...data.data,
-                  createdBy: user.uid,
-                };
-                return cat;
-              }),
-              map(cat => {
-                console.log(cat);
-                return this.categoriesService.create(cat)
-                  .then(() => {
-                    loadingElem.dismiss();
-                  });
-              })
-            ).subscribe();
-            break;
+      switch (data.mode) {
+        case 'create':
+          this.authService.user.pipe(
+            take(1),
+            map((user) => {
+              if (!user) {
+                return;
+              }
+              const cat: Category = {
+                ...data.data,
+                createdBy: user.uid,
+              };
+              return cat;
+            }),
+            map(cat => {
+              return this.categoriesService.create(cat);
+            })
+          ).subscribe();
+          break;
 
-          case 'edit':
-            this.categoriesService.update(id, data.data)
-              .then(() => {
-                loadingElem.dismiss();
-              });
-            break;
-          }
-        });
+        case 'edit':
+          this.categoriesService.update(id, data.data);
+          break;
+        }
       }
+  }
+
+  private async onDelete(id) {
+    const loader = await this.loadingCtrl.create({
+      message: 'loading...'
+    });
+    loader.present();
+    const deleted = this.categoriesService.delete(id);
+    if (deleted) {
+      loader.dismiss();
+    }
   }
 
   create() {
@@ -90,9 +98,24 @@ export class CategoriesPage implements OnInit {
     this.showModal('edit', id);
   }
 
-  delete(e: MouseEvent, id) {
+  async delete(e: MouseEvent, id) {
     e.preventDefault();
     e.stopPropagation();
-    this.categoriesService.delete(id);
+
+    const modal = await this.alertCtrl.create({
+      header: 'Category deletion',
+      message: 'Are you sure you want to delete this category?',
+      buttons: [
+        {
+          text: 'Delete',
+          handler: this.onDelete.bind(this, id)
+        },
+        {
+          text: 'Cancel',
+          role: 'cancel'
+        }
+      ]
+    });
+    modal.present();
   }
 }

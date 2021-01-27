@@ -3,18 +3,22 @@
     <ion-buttons slot="start">
       <ion-back-button defaultHref="/categories"></ion-back-button>
     </ion-buttons>
-    <ion-title>product-details</ion-title>
+    <ion-title>Product Info</ion-title>
   </ion-toolbar>
 </ion-header>
 
 <ion-content>
   <ng-container *ngIf="(product$ | async) as product">
     <ion-img [src]="product.photoUrl"></ion-img>
-    <div class="ion-padding">
-      <h2>{{ product.name }}</h2>
-      <p>{{ product.price | currency }}</p>
-      <p>created: {{ product.checkIn }}</p>
-      <div>{{ product.description }}</div>
-    </div>
+    <ion-list class="ion-padding-vertical">
+      <ion-item>
+        <ion-label>
+          <div class="title ion-text-capitalize">{{ product.name }}</div>
+          <p>created: {{ product.checkIn | date:'longDate' }}</p>
+        </ion-label>
+        <ion-note slot="end">{{ product.price | currency }}</ion-note>
+      </ion-item>
+    </ion-list>
+    <div class="description ion-padding">{{ product.description }}</div>
   </ng-container>
 </ion-content>

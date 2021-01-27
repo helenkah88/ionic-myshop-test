@@ -7,10 +7,12 @@ import { CategoriesService } from 'src/app/services/categories.service';
 import { ActivatedRoute, Router } from '@angular/router';
 import { AuthService } from 'src/app/services/auth.service';
 import { Product } from '../../../models/product.interface';
-import { map, take, switchMap } from 'rxjs/operators';
-// import { convertToBlob } from 'src/app/components/image-loader/image-loader.component';
+import { map, take, switchMap, tap } from 'rxjs/operators';
 import { CameraSource } from '@capacitor/core';
 import { StorageService } from '../../../services/storage.service';
+import { convertToBase64 } from 'src/app/utilities/convert-image';
+import { LoadingController } from '@ionic/angular';
+import { Image } from '../../../models/image.interface';
 
 @Component({
   selector: 'app-product-new',
@@ -20,9 +22,9 @@ import { StorageService } from '../../../services/storage.service';
 export class ProductNewPage implements OnInit {
 
   form: FormGroup;
-  categoryId;
+  categoryId: string;
   categories$: Observable<(Category & { categoryId: string; })[]>;
-  image: { photoUrl: string, format: string };
+  image: Image;
   imageFrom: CameraSource = CameraSource.Prompt;
   showPreview: boolean;
 
@@ -31,6 +33,7 @@ export class ProductNewPage implements OnInit {
     private productsService: ProductsService,
     private storageService: StorageService,
     private authService: AuthService,
+    private loadingCtrl: LoadingController,
     private router: Router,
     private activatedRoute: ActivatedRoute
   ) { }
@@ -50,15 +53,42 @@ export class ProductNewPage implements OnInit {
     });
   }
 
-  private convertToBase64({ photoUrl, format }) {
-    return photoUrl.replace(`data:image/${format};base64,`, '');
+  /** Getters for form controls */
+  get name() {
+    return this.form.get('name');
   }
 
-  onSubmit() {
+  get price() {
+    return this.form.get('price');
+  }
+
+  get category() {
+    return this.form.get('categoryId');
+  }
+
+  get description() {
+    return this.form.get('description');
+  }
+
+  async onSubmit() {
     if (!this.form.valid) {
       return;
     }
+
     let userData;
+
+    const loader = await this.loadingCtrl.create({
+      message: 'loading...'
+    });
+
+    loader.present();
+
+    this.categories$ = this.categoriesService.getAll().pipe(
+      tap(() => {
+        loader.dismiss();
+      })
+    );
+
     this.authService.user.pipe(
       take(1),
       switchMap((user) => {
@@ -72,7 +102,7 @@ export class ProductNewPage implements OnInit {
         this.form.patchValue({ photoUrl: url });
         const product: Product = {
           ...this.form.value,
-          checkIn: new Date(),
+          checkIn: new Date().toISOString(),
           createdBy: userData.uid
         };
         return product;
@@ -83,13 +113,14 @@ export class ProductNewPage implements OnInit {
     ).subscribe(() => {
       this.form.reset();
       this.showPreview = false;
+      loader.dismiss();
       this.router.navigateByUrl('/categories');
     });
   }
 
   async onImgPicked(file) {
       // const file = await convertToBlob(file);
-      file.photoUrl = this.convertToBase64(file);
+      file.photoUrl = convertToBase64(file);
       this.image = file;
   }
 }

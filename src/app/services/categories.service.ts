@@ -31,7 +31,6 @@ export class CategoriesService {
   delete(id) {
     return this.firestore.doc(`${this.colName}/${id}`).delete()
       .then(() => {
-        console.log(id);
         return this.firestore.collection('products', ref => ref.where('categoryId', '==', id)).get().pipe(
           tap(items => {
             if (items) {

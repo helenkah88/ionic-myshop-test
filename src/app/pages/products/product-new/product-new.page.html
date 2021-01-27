@@ -13,14 +13,37 @@
       <ion-label position="floating">Name</ion-label>
       <ion-input type="text" formControlName="name"></ion-input>
     </ion-item>
+    <div
+      class="error-msg"
+      *ngIf="name.invalid && name.touched"
+    >Please give your product a name
+    </div>
+
     <ion-item>
       <ion-label position="floating">Description</ion-label>
       <ion-input type="text" formControlName="description"></ion-input>
     </ion-item>
+    <div
+      class="error-msg"
+      *ngIf="description.hasError('required') && description.touched"
+    >Please write a few words about your product
+    </div>
+    <div
+      class="error-msg"
+      *ngIf="description.hasError('maxlength') && description.touched"
+    >Your description should be 100 characters max
+    </div>
+
     <ion-item>
       <ion-label position="floating">Price</ion-label>
       <ion-input type="number" formControlName="price"></ion-input>
     </ion-item>
+    <div
+      class="error-msg"
+      *ngIf="price.invalid && price.touched"
+    >Please enter a price
+    </div>
+
     <ion-item *ngIf="!categoryId">
       <ion-label position="floating">Categories</ion-label>
       <ion-select formControlName="categoryId">
@@ -30,6 +53,12 @@
         >{{ category.name }}</ion-select-option>
       </ion-select>
     </ion-item>
+    <div
+      class="error-msg"
+      *ngIf="category.invalid && category.touched && category.dirty"
+    >Please choose a category for your product
+    </div>
+
     <app-image-loader
       [cameraSourceType]="imageFrom"
       [showPreview]="showPreview"
@@ -38,6 +67,7 @@
     <ion-button
       class="ion-margin-vertical"
       color="primary"
+      expand="block"
       [disabled]="form.invalid"
       (click)="onSubmit()"
     >Save</ion-button>

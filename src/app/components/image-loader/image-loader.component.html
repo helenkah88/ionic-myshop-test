@@ -1,4 +1,4 @@
-<div>
+<div class="img-container ion-margin-vertical">
   <ion-button
     color="tertiary"
     slot="icon-only"
@@ -6,7 +6,7 @@
   >
     <ion-icon name="camera"></ion-icon>
   </ion-button>
-  <div class="image-preview" *ngIf="showPreview">
+  <div class="image-preview ion-margin-top" *ngIf="showPreview">
     <ion-img [src]="photo || defaultPreview"></ion-img>
   </div>
 </div>

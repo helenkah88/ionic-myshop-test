@@ -1,0 +1,9 @@
+.img-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+
+  .image-preview {
+    width: 100%;
+  }
+}

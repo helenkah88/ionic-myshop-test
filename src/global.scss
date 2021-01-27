@@ -24,3 +24,13 @@
 @import "~@ionic/angular/css/text-alignment.css";
 @import "~@ionic/angular/css/text-transformation.css";
 @import "~@ionic/angular/css/flex-utils.css";
+
+* {
+  outline: none;
+}
+
+.error-msg {
+  color: red;
+  font-size: 0.9em;
+  margin-top: 6px;
+}

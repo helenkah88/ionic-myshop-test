@@ -1,7 +1,6 @@
 import { Component, OnInit } from '@angular/core';
-import { AngularFireAuth } from '@angular/fire/auth';
 
-import { NgForm, FormGroup, FormControl, Validators } from '@angular/forms';
+import { FormGroup, FormControl, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { AlertController } from '@ionic/angular';
 import { AuthService } from '../../services/auth.service';
@@ -17,7 +16,6 @@ export class LoginComponent implements OnInit {
   isLogin = true;
 
   constructor(
-    private auth: AngularFireAuth,
     private authService: AuthService,
     private alertCtrl: AlertController,
     private router: Router
@@ -27,10 +25,6 @@ export class LoginComponent implements OnInit {
     this.form = new FormGroup({
       email: new FormControl('', { validators: [Validators.required, Validators.email]}),
       password: new FormControl('', { validators: [Validators.required, Validators.minLength(6)] })
-    });
-
-    this.auth.user.subscribe(user => {
-      // console.log(user.getIdTokenResult());
     });
   }
 
@@ -42,7 +36,6 @@ export class LoginComponent implements OnInit {
       const user = await this.authenticate(this.form.value);
       this.form.reset();
       if (user) {
-        console.log(user);
         this.router.navigateByUrl('/');
       }
     } catch (e) {

@@ -1,38 +1,29 @@
-import { AfterViewInit, Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
+import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
+import { Image } from '../../models/image.interface';
 import {
   Plugins,
   CameraResultType,
   CameraSource,
 } from '@capacitor/core';
 
-/* export async function convertToBlob(file: string) {
-  const res = await fetch(file);
-  const blob = await res.blob();
-  return blob;
-}
- */
 @Component({
   selector: 'app-image-loader',
   templateUrl: './image-loader.component.html',
   styleUrls: ['./image-loader.component.scss'],
 })
-export class ImageLoaderComponent implements OnInit, AfterViewInit {
+export class ImageLoaderComponent implements OnInit {
 
   @Input() cameraSourceType: CameraSource;
   @Input() showPreview: boolean;
   @Input() defaultPreview: string;
 
-  @Output() imgPicked = new EventEmitter<{ [K in string]: string }>();
+  @Output() imgPicked = new EventEmitter<Image>();
 
   photo: string;
 
   constructor() { }
 
   ngOnInit() {
-  }
-
-  ngAfterViewInit() {
-    console.log(this.cameraSourceType, this.showPreview, this.defaultPreview);
   }
 
   async takePicture() {
@@ -48,7 +39,7 @@ export class ImageLoaderComponent implements OnInit, AfterViewInit {
 
       if (capturedPhoto && capturedPhoto.dataUrl) {
         this.photo = capturedPhoto.dataUrl;
-        const photo = {
+        const photo: Image = {
           photoUrl: capturedPhoto.dataUrl,
           format: capturedPhoto.format
         };

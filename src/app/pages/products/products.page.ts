@@ -6,7 +6,7 @@ import { Product } from 'src/app/models/product.interface';
 import { ProductsService } from 'src/app/services/products.service';
 import { CategoriesService } from '../../services/categories.service';
 import { Category } from '../../models/category.interface';
-import { IonItemSliding, ModalController } from '@ionic/angular';
+import { AlertController, IonItemSliding, LoadingController, ModalController } from '@ionic/angular';
 import { ProductModalComponent } from 'src/app/components/product-modal/product-modal.component';
 
 @Component({
@@ -19,15 +19,24 @@ export class ProductsPage implements OnInit {
   products: (Product & { productId: string})[];
   categoryId;
   category: Category;
+  showTooltip = false;
 
   constructor(
     private categoriesService: CategoriesService,
     private productsService: ProductsService,
+    private loadingCtrl: LoadingController,
     private modalCtrl: ModalController,
+    private alertCtrl: AlertController,
     private route: ActivatedRoute
   ) { }
 
-  ngOnInit() {
+  async ngOnInit() {
+    const loader = await this.loadingCtrl.create({
+      message: 'loading...'
+    });
+
+    loader.present();
+
     this.route.paramMap.pipe(
       take(1),
       switchMap(params => {
@@ -42,6 +51,7 @@ export class ProductsPage implements OnInit {
     ).subscribe(([category, productList]) => {
       this.category = category;
       this.products = productList;
+      loader.dismiss();
     });
   }
 
@@ -66,8 +76,36 @@ export class ProductsPage implements OnInit {
     }
   }
 
-  delete(e: MouseEvent, id) {
+  private async onDelete(id) {
+    const loader = await this.loadingCtrl.create({
+      message: 'loading...'
+    });
+    loader.present();
+    const deleted = this.productsService.delete(id);
+    if (deleted) {
+      loader.dismiss();
+    }
+  }
+
+  async delete(e: MouseEvent, id, slidingItem: IonItemSliding) {
     e.stopPropagation();
-    this.productsService.delete(id);
+
+    slidingItem.close();
+
+    const modal = await this.alertCtrl.create({
+      header: 'Product deletion',
+      message: 'Are you sure you want to delete this product?',
+      buttons: [
+        {
+          text: 'Delete',
+          handler: this.onDelete.bind(this, id)
+        },
+        {
+          text: 'Cancel',
+          role: 'cancel'
+        }
+      ]
+    });
+    modal.present();
   }
 }

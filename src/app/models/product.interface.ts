@@ -5,6 +5,6 @@ export interface Product {
     price: number;
     createdBy: string;
     categoryId: string;
-    checkIn: Date;
+    checkIn: string;
     checkOut?: Date;
 }

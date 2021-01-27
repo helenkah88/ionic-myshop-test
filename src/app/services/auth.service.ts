@@ -38,7 +38,6 @@ export class AuthService {
           displayName: userCredential.user.displayName,
           photoUrl: userCredential.user.photoURL
         };
-        console.log(userData);
         return this.firestore.collection<User>('users').add(userData);
       }
     } catch (e) {
