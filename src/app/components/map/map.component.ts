@@ -1,34 +1,32 @@
-import { AfterViewInit, Component, OnInit } from '@angular/core';
+import { AfterViewInit, Component, OnInit, OnDestroy } from '@angular/core';
 
 import { LoadingController } from '@ionic/angular';
+
+import { Subscription } from 'rxjs';
 
 import * as L from 'leaflet';
 
 import { MapService, Card } from 'src/app/services/map.service';
-import { Observable } from 'rxjs';
 
 @Component({
   selector: 'app-map',
   templateUrl: './map.component.html',
   styleUrls: ['./map.component.scss'],
 })
-export class MapComponent implements OnInit, AfterViewInit {
+export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
 
   map: L.Map;
   isCardShown;
   cardContent: Card;
-  filtered;
   markers;
-  dataset$: Observable<any>;
   clusterGroup: L.MarkerClusterGroup;
+  dataSub: Subscription;
 
   constructor(
     private mapService: MapService,
     private loadingCtrl: LoadingController
   ) {
-    this.filtered = [];
     this.markers = [];
-    this.clusterGroup = L.markerClusterGroup();
   }
 
   ngOnInit() {}
@@ -39,8 +37,7 @@ export class MapComponent implements OnInit, AfterViewInit {
     });
     await loader.present();
 
-    this.mapService.getData().subscribe(data => {
-      // this.dataset = data;
+    this.dataSub = this.mapService.getData().subscribe(data => {
 
       this.map = L.map('map');
 
@@ -58,54 +55,36 @@ export class MapComponent implements OnInit, AfterViewInit {
       /** Should go AFTER the 'load' listener due to a known bug. */
       this.map.setView([ 39.8282, -98.5795 ], 8);
 
+      /** Map click handler */
       this.map.on('click', this.handleMapClick.bind(this));
 
+      /** Map zoom handler */
       this.map.on('zoomend', () => {
+        if (!this.clusterGroup) {
+          return;
+        }
         this.clusterGroup.removeLayers(this.markers);
-        this.setCluster(this.map.getBounds());
+        this.clusterGroup = this.mapService.setCluster(this.map, this.markers);
       });
 
       /** get the bounds of the visible map area */
       const bounds = this.map.getBounds();
-      this.setCluster(bounds);
-    });
-  }
 
-  private setCluster(bounds: L.LatLngBounds) {
-    /** get Geohashes for the given bounds */
-    const geohashes = this.getGeohashes(bounds);
-    // console.log(geohashes);
+      /** filter DATASET using geohashes */
+      const filtered = this.mapService.filterByGeohashes(bounds, data);
 
-    /** filter DATASET using geohashes */
-    this.filtered = this.filterByGeohashes(geohashes, this.dataset);
-
-    /** set markers for the filteres data */
-    if (this.filtered.length) {
-      this.markers = this.setMarkers(this.filtered);
-    }
-
-    /** create cluster group */
-    this.clusterGroup.addLayers(this.markers);
-    this.map.addLayer(this.clusterGroup);
-  }
-
-  private getGeohashes(coords: L.LatLngBounds): string[] {
-    const { lat: minLat, lng: minLog } = coords.getSouthWest();
-    const { lat: maxLat, lng: maxLog } = coords.getNorthEast();
-
-    return Geohash.bboxes(minLat, minLog, maxLat, maxLog, 2);
-  }
-
-  private filterByGeohashes(geohashes: string[], data = {}) {
-    const filtered = [];
-    geohashes.forEach(hash => {
-      if (data[hash]) {
-        data[hash].forEach(item => {
-          filtered.push(item);
-        });
+      /** set markers for the filteres data */
+      if (filtered.length) {
+        this.markers = this.setMarkers(filtered);
+        this.clusterGroup = this.mapService.setCluster(this.map, this.markers);
       }
     });
-    return filtered;
+  }
+
+  ngOnDestroy() {
+    if (this.dataSub) {
+      this.dataSub.unsubscribe();
+    }
   }
 
   private setMarkers(data) {

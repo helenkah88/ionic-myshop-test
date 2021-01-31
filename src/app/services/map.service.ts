@@ -1,11 +1,12 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 
+import { of } from 'rxjs';
+import { catchError } from 'rxjs/operators';
+
 import * as L from 'leaflet';
 import 'leaflet.markercluster';
 import * as Geohash from 'ngeohash';
-import { catchError } from 'rxjs/operators';
-import { of } from 'rxjs';
 
 export interface Card {
   name: string;
@@ -34,6 +35,13 @@ export class MapService {
 
   constructor(private http: HttpClient) { }
 
+  private getGeohashes(coords: L.LatLngBounds): string[] {
+    const { lat: minLat, lng: minLog } = coords.getSouthWest();
+    const { lat: maxLat, lng: maxLog } = coords.getNorthEast();
+
+    return Geohash.bboxes(minLat, minLog, maxLat, maxLog, 2);
+  }
+
   getData() {
     return this.http.get('/assets/data/location.json').pipe(
       catchError(err => {
@@ -41,5 +49,28 @@ export class MapService {
         return of(err);
       })
     );
+  }
+
+  setCluster(map: L.Map, markers: L.Marker[]) {
+    /** create cluster group */
+    const clusterGroup = L.markerClusterGroup();
+    clusterGroup.addLayers(markers);
+    map.addLayer(clusterGroup);
+
+    return clusterGroup;
+  }
+
+  filterByGeohashes(bounds: L.LatLngBounds, data = {}) {
+    /** get Geohashes for the given bounds */
+    const geohashes = this.getGeohashes(bounds);
+    const filtered = [];
+    geohashes.forEach(hash => {
+      if (data[hash]) {
+        data[hash].forEach(item => {
+          filtered.push(item);
+        });
+      }
+    });
+    return filtered;
   }
 }
