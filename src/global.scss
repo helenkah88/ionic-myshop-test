@@ -25,6 +25,13 @@
 @import "~@ionic/angular/css/text-transformation.css";
 @import "~@ionic/angular/css/flex-utils.css";
 
+/* Basic CSS for leaflet map */
+@import "~leaflet/dist/leaflet.css";
+
+/* Basic CSS for leaflet cluster */
+@import "~leaflet.markercluster/dist/MarkerCluster.css";
+@import "~leaflet.markercluster/dist/MarkerCluster.Default.css";
+
 * {
   outline: none;
 }

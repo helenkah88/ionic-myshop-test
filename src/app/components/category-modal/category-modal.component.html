@@ -48,7 +48,7 @@
       class="ion-margin-vertical"
       color="primary"
       expand="block"
-      [disabled]="form.invalid || !(isDirty$ | async) && !isImgModified"
+      [disabled]="!(isDirty$ | async) && !isImgModified"
       (click)="onSubmit()"
     >{{ mode === 'create' ? 'Create' : 'Edit' }}</ion-button>
   </form>

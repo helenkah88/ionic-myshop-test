@@ -22,6 +22,12 @@
           </ion-item>
         </ion-menu-toggle>
         <ion-menu-toggle>
+          <ion-item routerLink="/map">
+            <ion-icon slot="start" name="map"></ion-icon>
+            <ion-label>Map</ion-label>
+          </ion-item>
+        </ion-menu-toggle>
+        <ion-menu-toggle>
           <ion-item (click)="authService.logout()" button>
             <ion-icon slot="start" name="exit"></ion-icon>
             <ion-label>Log out</ion-label>
