@@ -1,8 +1,9 @@
 import { Component, OnInit } from '@angular/core';
-
 import { FormGroup, FormControl, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
+
 import { AlertController } from '@ionic/angular';
+
 import { AuthService } from '../../services/auth.service';
 
 @Component({
@@ -13,13 +14,15 @@ import { AuthService } from '../../services/auth.service';
 export class LoginComponent implements OnInit {
 
   form: FormGroup;
-  isLogin = true;
+  isLoginMode: boolean;
 
   constructor(
     private authService: AuthService,
     private alertCtrl: AlertController,
     private router: Router
-  ) { }
+  ) {
+    this.isLoginMode = true;
+  }
 
   ngOnInit() {
     this.form = new FormGroup({
@@ -55,15 +58,14 @@ export class LoginComponent implements OnInit {
   }
 
   private authenticate({email, password}) {
-    if (this.isLogin) {
+    if (this.isLoginMode) {
       return this.authService.login(email, password);
     } else {
-      // this.isLogin = !this.isLogin;
       return this.authService.signup(email, password);
     }
   }
 
-  private async showAlert(msg) {
+  private async showAlert(msg: string) {
     const modal = await this.alertCtrl.create({
       header: 'Authentication failed',
       message: msg,
@@ -73,7 +75,7 @@ export class LoginComponent implements OnInit {
   }
 
   toggleLoginState() {
-    this.isLogin = !this.isLogin;
+    this.isLoginMode = !this.isLoginMode;
   }
 
 }

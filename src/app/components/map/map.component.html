@@ -1,4 +1,25 @@
 <div id="map">
+  <ion-chip class="filter" outline>
+    <ion-icon name="funnel" size="small" color="primary"></ion-icon>
+    <ion-label>Filter By Category</ion-label>
+    <ion-select multiple (ionChange)="selectByCategory($event)" [value]="selected$ | async">
+      <ion-select-option [value]="'all'">select all</ion-select-option>
+      <ion-select-option [value]="'none'">deselect all</ion-select-option>
+      <ion-select-option
+        *ngFor="let category of (filter$ | async)"
+        [value]="category"
+      >{{ category }}</ion-select-option>
+    </ion-select>
+  </ion-chip>
+  <div class="chips" *ngIf="selected$ | async as selected">
+    <ion-chip
+      *ngFor="let item of selected"
+      (click)="removeChip(item)"
+      outline
+    >
+      <ion-label>{{ item }}</ion-label>
+    </ion-chip>
+  </div>
   <app-map-card
     [showCard]="isCardShown"
     [cardContent]="cardContent"

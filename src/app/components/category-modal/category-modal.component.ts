@@ -1,15 +1,19 @@
 import { Component, OnInit, Input, OnDestroy } from '@angular/core';
-import { AlertController, LoadingController, ModalController } from '@ionic/angular';
 import { FormGroup, FormControl, Validators } from '@angular/forms';
-import { CategoriesService } from 'src/app/services/categories.service';
-import { Category } from '../../models/category.interface';
-import { map, take } from 'rxjs/operators';
+
+import { AlertController, LoadingController, ModalController } from '@ionic/angular';
 import { CameraSource } from '@capacitor/core';
-import { StorageService } from '../../services/storage.service';
+
+import { Observable, of, Subject } from 'rxjs';
+import { map, take, takeUntil } from 'rxjs/operators';
+
 import { dirtyCheck } from '@ngneat/dirty-check-forms';
-import { Observable, of, Subscription } from 'rxjs';
-import { Image } from '../../models/image.interface';
+
+import { CategoriesService } from 'src/app/services/categories.service';
+import { StorageService } from '../../services/storage.service';
 import { convertToBase64 } from 'src/app/utilities/convert-image';
+import { Category } from '../../models/category.interface';
+import { Image } from '../../models/image.interface';
 
 export type mode = 'create' | 'edit';
 
@@ -29,16 +33,9 @@ export class CategoryModalComponent implements OnInit, OnDestroy {
   defaultPreview: string;
   isLoaded: boolean;
   isImgModified: boolean;
-  categorySub: Subscription;
-  imageSub: Subscription;
-  isDirtySub: Subscription;
   isDirty$: Observable<boolean>;
-
-  form = new FormGroup({
-    name: new FormControl('', { validators: [Validators.required] }),
-    description: new FormControl('', { validators: [Validators.required, Validators.maxLength(100)] }),
-    coverImg: new FormControl('')
-  });
+  onDestroy$: Subject<null>;
+  form;
 
   constructor(
     private categoriesService: CategoriesService,
@@ -46,11 +43,17 @@ export class CategoryModalComponent implements OnInit, OnDestroy {
     private loadingCtrl: LoadingController,
     private modalCtrl: ModalController,
     private alertCtrl: AlertController
-  ) { }
+  ) {
+    this.form = new FormGroup({
+      name: new FormControl('', { validators: [Validators.required] }),
+      description: new FormControl('', { validators: [Validators.required, Validators.maxLength(100)] }),
+      coverImg: new FormControl('')
+    });
+  }
 
   ngOnInit() {
     if (this.mode === 'edit' && this.categoryId) {
-      this.categorySub = this.categoriesService.getSingleById(this.categoryId).pipe(
+      this.categoriesService.getSingleById(this.categoryId).pipe(
         take(1),
         map((category: Category) => {
           return {
@@ -58,7 +61,8 @@ export class CategoryModalComponent implements OnInit, OnDestroy {
             description: category.description,
             coverImg: category.coverImg
           };
-        })
+        }),
+        takeUntil(this.onDestroy$)
       )
       .subscribe(category => {
         this.populateForm(category);
@@ -106,7 +110,10 @@ export class CategoryModalComponent implements OnInit, OnDestroy {
   }
 
   onCancel() {
-    this.isDirtySub = this.isDirty$.pipe(take(1))
+    this.isDirty$.pipe(
+      take(1),
+      takeUntil(this.onDestroy$)
+    )
     .subscribe(async (dirty) => {
       if (!dirty && !this.isImgModified) {
         this.modalCtrl.dismiss(null, 'cancel');
@@ -151,8 +158,9 @@ export class CategoryModalComponent implements OnInit, OnDestroy {
       this.handleModal(formData);
       loader.dismiss();
     } else {
-      this.imageSub = this.storageService.saveImg(this.image).pipe(
-        take(1)
+      this.storageService.saveImg(this.image).pipe(
+        take(1),
+        takeUntil(this.onDestroy$)
       ).subscribe(url => {
         this.updateForm({ coverImg: url });
         formData = {
@@ -166,12 +174,7 @@ export class CategoryModalComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy() {
-    // tslint:disable-next-line: no-unused-expression
-    this.categorySub && this.categorySub.unsubscribe();
-    // tslint:disable-next-line: no-unused-expression
-    this.isDirtySub && this.isDirtySub.unsubscribe();
-    // tslint:disable-next-line: no-unused-expression
-    this.imageSub && this.imageSub.unsubscribe();
+    this.onDestroy$.next(null);
   }
 
   async onImgPicked(file) {

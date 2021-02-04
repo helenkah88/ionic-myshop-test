@@ -35,7 +35,8 @@ export class ProductsPage implements OnInit {
       message: 'loading...'
     });
 
-    loader.present();
+    let counter = 0;
+    await loader.present();
 
     this.route.paramMap.pipe(
       take(1),
@@ -50,12 +51,13 @@ export class ProductsPage implements OnInit {
       })
     ).subscribe(([category, productList]) => {
       this.category = category;
+      console.log(productList, ++counter);
       this.products = productList;
       loader.dismiss();
     });
   }
 
-  async edit(e: MouseEvent, id, slidingItem: IonItemSliding) {
+  async edit(e: MouseEvent, id: string, slidingItem: IonItemSliding) {
     e.stopPropagation();
     const modal = await this.modalCtrl.create({
       component: ProductModalComponent,
@@ -64,15 +66,44 @@ export class ProductsPage implements OnInit {
       }
     });
 
-    modal.present();
+    await modal.present();
     const { data, role } = await modal.onDidDismiss<Product>();
+    const loader = await this.loadingCtrl.create({
+      message: 'loading...'
+    });
+    await loader.present();
 
     if (role === 'confirm') {
-      this.productsService.update(id, data);
+      try {
+        await this.productsService.update(id, data);
+        loader.dismiss();
+
+        const alert = await this.alertCtrl.create({
+          message: 'A product is successfully updated!'
+        });
+        await alert.present();
+
+        setTimeout(() => {
+          alert.dismiss();
+        }, 3000);
+      } catch (e) {
+        loader.dismiss();
+        slidingItem.close();
+
+        const alert = await this.alertCtrl.create({
+          message: 'An error occured, please try again later'
+        });
+        await alert.present();
+
+        setTimeout(() => {
+          alert.dismiss();
+        }, 3000);
+      }
     }
 
     if (role === 'cancel') {
       slidingItem.close();
+      loader.dismiss();
     }
   }
 
@@ -80,10 +111,30 @@ export class ProductsPage implements OnInit {
     const loader = await this.loadingCtrl.create({
       message: 'loading...'
     });
-    loader.present();
-    const deleted = this.productsService.delete(id);
-    if (deleted) {
+    await loader.present();
+    try {
+      await this.productsService.delete(id);
       loader.dismiss();
+
+      const alert = await this.alertCtrl.create({
+        message: 'A product is successfully deleted!'
+      });
+      await alert.present();
+
+      setTimeout(() => {
+        alert.dismiss();
+      }, 3000);
+    } catch (err) {
+      loader.dismiss();
+
+      const alert = await this.alertCtrl.create({
+        message: 'An error occured, please try again later'
+      });
+      await alert.present();
+
+      setTimeout(() => {
+        alert.dismiss();
+      }, 3000);
     }
   }
 

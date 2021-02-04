@@ -1,6 +1,6 @@
 <ion-header>
   <ion-toolbar color="primary">
-    <ion-title>{{ isLogin ? 'Log in' : 'Sign up' }}</ion-title>
+    <ion-title>{{ isLoginMode ? 'Log in' : 'Sign up' }}</ion-title>
   </ion-toolbar>
 </ion-header>
 
@@ -33,6 +33,6 @@
       [disabled]="form.invalid"
       (click)="onSubmit()"
       class="ion-no-margin"
-    >{{ isLogin ? 'Log in' : 'Sign Up' }}</ion-button>
+    >{{ isLoginMode ? 'Log in' : 'Sign Up' }}</ion-button>
   </form>
 </ion-content>

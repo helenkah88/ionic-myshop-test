@@ -1,14 +1,18 @@
 import { Component, OnInit, Input, OnDestroy } from '@angular/core';
 import { FormControl, FormGroup, Validators } from '@angular/forms';
-import { AlertController, LoadingController, ModalController } from '@ionic/angular';
-import { ProductsService } from 'src/app/services/products.service';
-import { map, take } from 'rxjs/operators';
+
+import { AlertController, ModalController } from '@ionic/angular';
 import { CameraSource } from '@capacitor/core';
-import { StorageService } from 'src/app/services/storage.service';
+
+import { Observable, of, Subject } from 'rxjs';
+import { map, take, takeUntil } from 'rxjs/operators';
+
 import { dirtyCheck } from '@ngneat/dirty-check-forms';
-import { Observable, of, Subscription } from 'rxjs';
-import { Image } from '../../models/image.interface';
+
+import { ProductsService } from 'src/app/services/products.service';
+import { StorageService } from 'src/app/services/storage.service';
 import { convertToBase64 } from 'src/app/utilities/convert-image';
+import { Image } from '../../models/image.interface';
 
 @Component({
   selector: 'app-product-modal',
@@ -25,28 +29,26 @@ export class ProductModalComponent implements OnInit, OnDestroy {
   defaultPreview: string;
   isLoaded: boolean;
   isImgModified: boolean;
-  productSub: Subscription;
-  imageSub: Subscription;
-  isDirtySub: Subscription;
   isDirty$: Observable<boolean>;
-
-  form: FormGroup = new FormGroup({
-    name: new FormControl('', { validators: [Validators.required] }),
-    description: new FormControl('', { validators: [Validators.required, Validators.maxLength(100)] }),
-    price: new FormControl('', { validators: [Validators.required, Validators.max(1000000)] }),
-    photoUrl: new FormControl('')
-  });
+  onDestroy$: Subject<null>;
+  form: FormGroup;
 
   constructor(
     private productsService: ProductsService,
     private storageService: StorageService,
-    private loadingCtrl: LoadingController,
     private modalCtrl: ModalController,
     private alertCtrl: AlertController
-  ) { }
+  ) {
+    this.form = new FormGroup({
+      name: new FormControl('', { validators: [Validators.required] }),
+      description: new FormControl('', { validators: [Validators.required, Validators.maxLength(100)] }),
+      price: new FormControl('', { validators: [Validators.required, Validators.max(1000000)] }),
+      photoUrl: new FormControl('')
+    });
+  }
 
   ngOnInit() {
-    this.productSub = this.productsService.getSingleById(this.productId).pipe(
+    this.productsService.getSingleById(this.productId).pipe(
       take(1),
       map(data => {
         return {
@@ -55,7 +57,8 @@ export class ProductModalComponent implements OnInit, OnDestroy {
           price: data.price,
           photoUrl: data.photoUrl
         };
-      })
+      }),
+      takeUntil(this.onDestroy$)
     )
     .subscribe(product => {
       this.populateForm(product);
@@ -98,7 +101,10 @@ export class ProductModalComponent implements OnInit, OnDestroy {
   }
 
   onCancel() {
-    this.isDirtySub = this.isDirty$.pipe(take(1))
+    this.isDirty$.pipe(
+      take(1),
+      takeUntil(this.onDestroy$)
+    )
     .subscribe(async (dirty) => {
       if (!dirty && !this.isImgModified) {
         this.modalCtrl.dismiss(null, 'cancel');
@@ -110,7 +116,6 @@ export class ProductModalComponent implements OnInit, OnDestroy {
               text: 'Leave',
               handler: () => {
                 this.modalCtrl.dismiss(null, 'cancel');
-                this.isDirtySub.unsubscribe();
                 return true;
               }
             },
@@ -129,33 +134,21 @@ export class ProductModalComponent implements OnInit, OnDestroy {
     if (!this.form.valid) {
       return;
     }
-    const loader = await this.loadingCtrl.create({
-      message: 'loading...'
-    });
-
-    loader.present();
-
     if (!this.isImgModified) {
       this.handleModal(this.form.value);
-      loader.dismiss();
     } else {
-      this.imageSub = this.storageService.saveImg(this.image).pipe(
-        take(1)
+      this.storageService.saveImg(this.image).pipe(
+        take(1),
+        takeUntil(this.onDestroy$)
       ).subscribe(url => {
         this.updateForm({ photoUrl: url });
         this.handleModal(this.form.value);
-        loader.dismiss();
       });
     }
   }
 
   ngOnDestroy() {
-    // tslint:disable-next-line: no-unused-expression
-    this.productSub && this.productSub.unsubscribe();
-    // tslint:disable-next-line: no-unused-expression
-    this.isDirtySub && this.isDirtySub.unsubscribe();
-    // tslint:disable-next-line: no-unused-expression
-    this.imageSub && this.imageSub.unsubscribe();
+    this.onDestroy$.next(null);
   }
 
   async onImgPicked(file) {

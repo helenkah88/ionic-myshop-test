@@ -1,12 +1,14 @@
 import { Component, OnInit } from '@angular/core';
-import { Observable } from 'rxjs';
-import { Category } from 'src/app/models/category.interface';
-import { CategoriesService } from 'src/app/services/categories.service';
 
 import { AlertController, LoadingController, ModalController } from '@ionic/angular';
+
+import { map, take, tap } from 'rxjs/operators';
+import { Observable } from 'rxjs';
+
+import { Category } from 'src/app/models/category.interface';
+import { CategoriesService } from 'src/app/services/categories.service';
 import { CategoryModalComponent, mode } from 'src/app/components/category-modal/category-modal.component';
 import { AuthService } from 'src/app/services/auth.service';
-import { map, take, tap } from 'rxjs/operators';
 
 @Component({
   selector: 'app-categories',
@@ -77,14 +79,24 @@ export class CategoriesPage implements OnInit {
       }
   }
 
-  private async onDelete(id) {
+  private async onDelete(id: string) {
     const loader = await this.loadingCtrl.create({
       message: 'loading...'
     });
-    loader.present();
-    const deleted = this.categoriesService.delete(id);
-    if (deleted) {
+    await loader.present();
+    try {
+      await this.categoriesService.delete(id);
       loader.dismiss();
+    } catch (err) {
+      console.log(err);
+      loader.dismiss();
+      const alert = await this.alertCtrl.create({
+        message: 'An error occured, please try again later'
+      });
+      await alert.present();
+      setTimeout(() => {
+        alert.dismiss();
+      }, 3000);
     }
   }
 
